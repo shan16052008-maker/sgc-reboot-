@@ -550,7 +550,7 @@ export const TEAM_MEMBERS: TeamMemberData[] = [
     role: "Session Handler",
     department: "Information Technology",
     year: "IV Year",
-    image: "/placeholder.svg",
+    image: "/abishek.jpg",
     linkedin: "https://www.linkedin.com/in/ak-abishek/",
     category: "Lead & Handler",
   },
