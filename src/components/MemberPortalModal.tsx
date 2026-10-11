@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { X, Lock, Mail, User, CheckCircle, ArrowRight, Sparkles, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Lock, Mail, User, CheckCircle, ArrowRight, Sparkles, ExternalLink, ShieldCheck } from "lucide-react";
 import { SGC_IDENTITY, SOCIAL_LINKS } from "../data/sgcData";
+import { isSupabaseConfigured, signInMember, signUpMember, supabase } from "../lib/supabase";
 
 interface MemberPortalModalProps {
   isOpen: boolean;
@@ -13,49 +14,123 @@ export default function MemberPortalModal({ isOpen, onClose }: MemberPortalModal
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [regNo, setRegNo] = useState("");
+  const [dept, setDept] = useState("CSE • III Year");
   const [role, setRole] = useState<"Trainee" | "Session Handler" | "Executive Lead">("Trainee");
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+
+  // Check existing session if Supabase is connected
+  useEffect(() => {
+    if (isSupabaseConfigured && supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user?.email) {
+          setCurrentUserEmail(session.user.email);
+        }
+      });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user?.email) {
+          setCurrentUserEmail(session.user.email);
+        } else {
+          setCurrentUserEmail(null);
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, []);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setFeedback(null);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      if (tab === "LOGIN") {
-        if (!email.includes("@")) {
-          setFeedback({ type: "error", text: "Please enter a valid college or personal email address." });
+    if (tab === "LOGIN") {
+      if (!email.includes("@")) {
+        setIsLoading(false);
+        setFeedback({ type: "error", text: "Please enter a valid college or personal email address." });
+        return;
+      }
+      if (password.length < 6) {
+        setIsLoading(false);
+        setFeedback({ type: "error", text: "Password must be at least 6 characters." });
+        return;
+      }
+
+      if (isSupabaseConfigured) {
+        const { data, error } = await signInMember(email, password);
+        setIsLoading(false);
+        if (error) {
+          setFeedback({ type: "error", text: error.message || "Failed to authenticate with Supabase Auth." });
           return;
         }
-        if (password.length < 6) {
-          setFeedback({ type: "error", text: "Password must be at least 6 characters." });
-          return;
-        }
+        setCurrentUserEmail(data.user?.email || email);
         setFeedback({
           type: "success",
-          text: `Welcome back! Signed in as ${role}. Redirecting to SGC workspace...`
+          text: `Welcome back! Authenticated via Supabase Auth (${data.user?.email}). Redirecting...`,
         });
         setTimeout(() => {
           setTab("DASHBOARD_PREVIEW");
         }, 1200);
       } else {
-        if (!name || !regNo) {
-          setFeedback({ type: "error", text: "Please provide your full name and college Register Number." });
+        // Fallback for local development or demo
+        setTimeout(() => {
+          setIsLoading(false);
+          setFeedback({
+            type: "success",
+            text: `Welcome back! Signed in as ${role} (Local workspace preview).`,
+          });
+          setTimeout(() => {
+            setTab("DASHBOARD_PREVIEW");
+          }, 1000);
+        }, 500);
+      }
+    } else {
+      // REGISTER
+      if (!name || !regNo) {
+        setIsLoading(false);
+        setFeedback({ type: "error", text: "Please provide your full name and college Register Number." });
+        return;
+      }
+
+      if (isSupabaseConfigured) {
+        const { data, error } = await signUpMember(email, password, {
+          full_name: name,
+          reg_no: regNo,
+          department: dept,
+          role,
+        });
+        setIsLoading(false);
+        if (error) {
+          setFeedback({ type: "error", text: error.message || "Could not register user with Supabase." });
           return;
         }
+        setCurrentUserEmail(data.user?.email || email);
         setFeedback({
           type: "success",
-          text: "Registration application received! Verification dispatched to SGC Executive Council."
+          text: "Registration successful! Account created in Supabase Auth. Check inbox if email confirmation is required.",
         });
         setTimeout(() => {
           setTab("DASHBOARD_PREVIEW");
-        }, 1200);
+        }, 1400);
+      } else {
+        setTimeout(() => {
+          setIsLoading(false);
+          setFeedback({
+            type: "success",
+            text: "Registration application received! Verification dispatched to SGC Executive Council.",
+          });
+          setTimeout(() => {
+            setTab("DASHBOARD_PREVIEW");
+          }, 1000);
+        }, 500);
       }
-    }, 600);
+    }
   };
 
   return (
@@ -271,6 +346,8 @@ export default function MemberPortalModal({ isOpen, onClose }: MemberPortalModal
                     Department &amp; Year
                   </label>
                   <select
+                    value={dept}
+                    onChange={(e) => setDept(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-xl bg-white border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-400 shadow-xs"
                   >
                     <option>CSE &bull; III Year</option>
@@ -297,6 +374,23 @@ export default function MemberPortalModal({ isOpen, onClose }: MemberPortalModal
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1">
+                  Create Password
+                </label>
+                <div className="relative">
+                  <Lock size={15} className="absolute left-3.5 top-3 text-neutral-400" />
+                  <input
+                    type="password"
+                    required
+                    placeholder="Create a password (min 6 chars)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-neutral-200 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 shadow-xs"
+                  />
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={isLoading}
@@ -314,19 +408,20 @@ export default function MemberPortalModal({ isOpen, onClose }: MemberPortalModal
                 <div className="flex items-center justify-between pb-3 border-b border-neutral-200/60">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center font-bold text-sm">
-                      MZ
+                      {currentUserEmail ? currentUserEmail.slice(0, 2).toUpperCase() : "MZ"}
                     </div>
                     <div>
                       <div className="font-bold text-sm text-neutral-900">
-                        Mohamed Zahangir (III Year AI&amp;DS)
+                        {currentUserEmail ? currentUserEmail : "Mohamed Zahangir (III Year AI&DS)"}
                       </div>
                       <div className="text-[11px] text-neutral-500">
-                        Role: Administrator &amp; VIT Hackulus &apos;26 Winner (CARDIA)
+                        {currentUserEmail ? `Role: ${role} • Supabase Verified` : "Role: Administrator • VIT Hackulus '26 Winner (CARDIA)"}
                       </div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    ACTIVE MEMBER
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <ShieldCheck size={11} />
+                    {isSupabaseConfigured ? "SUPABASE LIVE" : "ACTIVE MEMBER"}
                   </span>
                 </div>
 
@@ -374,8 +469,11 @@ export default function MemberPortalModal({ isOpen, onClose }: MemberPortalModal
         </div>
 
         {/* Footer info note */}
-        <div className="p-3 bg-neutral-50 border-t border-neutral-100 text-center text-[11px] font-mono text-neutral-500">
-          Secure Student Authentication &bull; CAHCET Melvisharam Campus Network
+        <div className="p-3 bg-neutral-50 border-t border-neutral-100 text-center text-[11px] font-mono text-neutral-500 flex items-center justify-center gap-2">
+          <span>Secure Student Authentication &bull; CAHCET Melvisharam Campus Network</span>
+          {isSupabaseConfigured && (
+            <span className="text-emerald-700 font-bold">• Supabase Connected</span>
+          )}
         </div>
       </div>
     </div>

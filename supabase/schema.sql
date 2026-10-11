@@ -51,4 +51,53 @@ CREATE TABLE IF NOT EXISTS daily_sessions (
 );
 
 ALTER TABLE daily_sessions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access on daily_sessions" ON daily_sessions;
 CREATE POLICY "Allow public read access on daily_sessions" ON daily_sessions FOR SELECT USING (true);
+
+-- 4. MEMBER PROFILES TABLE (Linked with Supabase Auth)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  email TEXT NOT NULL,
+  full_name TEXT,
+  reg_no TEXT,
+  department TEXT,
+  role TEXT DEFAULT 'Trainee',
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Profiles RLS: Public read, authenticated users can update only their own profile
+DROP POLICY IF EXISTS "Allow public read access on profiles" ON profiles;
+CREATE POLICY "Allow public read access on profiles" ON profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow users to update own profile" ON profiles;
+CREATE POLICY "Allow users to update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Allow users to insert own profile" ON profiles;
+CREATE POLICY "Allow users to insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Automatic Profile Creation Trigger on Supabase Auth Sign Up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, reg_no, department, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'reg_no',
+    NEW.raw_user_meta_data->>'department',
+    COALESCE(NEW.raw_user_meta_data->>'role', 'Trainee')
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

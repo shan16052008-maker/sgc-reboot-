@@ -23,15 +23,61 @@ export interface Alumni {
 }
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+// Support both VITE_SUPABASE_PUBLISHABLE_KEY and legacy VITE_SUPABASE_ANON_KEY
+const supabasePublishableKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "";
 
 export const isSupabaseConfigured = Boolean(
-  supabaseUrl && supabaseAnonKey && !supabaseUrl.includes("YOUR_")
+  supabaseUrl &&
+    supabasePublishableKey &&
+    !supabaseUrl.includes("your-project-id") &&
+    !supabaseUrl.includes("YOUR_") &&
+    supabaseUrl.startsWith("http")
 );
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabasePublishableKey)
   : null;
+
+/**
+ * Supabase Auth: Sign In with Email & Password
+ */
+export async function signInMember(email: string, password: string) {
+  if (!supabase) {
+    return { data: null, error: new Error("Supabase is not configured yet. Set credentials in .env") };
+  }
+  return await supabase.auth.signInWithPassword({ email, password });
+}
+
+/**
+ * Supabase Auth: Sign Up new Member with metadata
+ */
+export async function signUpMember(
+  email: string,
+  password: string,
+  metadata?: { full_name?: string; reg_no?: string; department?: string; role?: string }
+) {
+  if (!supabase) {
+    return { data: null, error: new Error("Supabase is not configured yet. Set credentials in .env") };
+  }
+  return await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: metadata || {},
+    },
+  });
+}
+
+/**
+ * Supabase Auth: Sign Out
+ */
+export async function signOutMember() {
+  if (!supabase) return { error: null };
+  return await supabase.auth.signOut();
+}
 
 /**
  * Fetch team members from Supabase if configured, otherwise returns verified dataset.
