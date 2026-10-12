@@ -1,10 +1,7 @@
 import "./styles/home.css";
 import { useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
-import { 
-  ArrowUp, Sparkles, Compass, Users, Calendar, Trophy, 
-  Lock, Search, HelpCircle, RotateCcw, Mail 
-} from "lucide-react";
+import { ArrowUp, RotateCcw } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -58,11 +55,6 @@ function App() {
         ".hero-reveal",
         { y: 30, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.75, stagger: 0.1, ease: "power3.out" }
-      );
-      gsap.fromTo(
-        ".floating-dock",
-        { y: 60, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.6)", delay: 0.4 }
       );
     }
   }, []);
@@ -206,122 +198,17 @@ function App() {
       {/* Global Feedback Toast Notification System */}
       <Toast toasts={toasts} onDismiss={dismissToast} />
 
-      {/* Modern Executive Floating Navigation Dock with Official Logo */}
-      <aside
-        aria-label="Interactive Quick Navigation Dock"
-        className="floating-dock fixed bottom-5 left-1/2 -translate-x-1/2 z-40 px-3 py-2 rounded-full bg-white/90 backdrop-blur-xl border border-neutral-200/80 shadow-xl flex items-center gap-2 sm:gap-3 text-xs font-medium max-w-[95vw]"
-      >
-        {/* Dock Logo Icon */}
-        <a
-          href="#home"
-          className="w-7 h-7 rounded-full bg-white border border-neutral-200 p-0.5 shadow-xs flex items-center justify-center shrink-0 hover:scale-110 transition-transform"
-          title="Back to Top / Home"
-        >
-          <img src="/logo.png" alt="SGC" className="w-full h-full object-contain" />
-        </a>
-
+      {/* Floating Scroll to Top Action Button */}
+      {showScrollTop && (
         <button
-          onClick={() => setIsCommandPaletteOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-900 transition-colors cursor-pointer"
-          title="Search SGC (Ctrl+K)"
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-neutral-900 text-white shadow-xl hover:bg-neutral-800 transition-all cursor-pointer hover:scale-105"
+          aria-label="Back to top"
+          title="Scroll to Top"
         >
-          <Search size={13} className="text-neutral-500" />
-          <span className="hidden sm:inline font-semibold">Search</span>
-          <kbd className="px-1.5 py-0.5 rounded bg-white text-[9px] font-mono border border-neutral-200 text-neutral-600">⌘K</kbd>
+          <ArrowUp size={16} />
         </button>
-
-        <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] text-neutral-500 font-mono pr-2 border-r border-neutral-200">
-          <Sparkles size={12} className="text-amber-500" />
-          {SGC_IDENTITY.motto}
-        </span>
-
-        <nav className="flex items-center gap-1">
-          <a
-            href="#about"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors text-[11px] font-semibold"
-            title="About SGC"
-          >
-            About
-          </a>
-          <a
-            href="#achievements"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Achievements"
-          >
-            <Trophy size={13} />
-            <span className="hidden sm:inline">Wins</span>
-          </a>
-          <a
-            href="#daily-sessions"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Daily Sessions"
-          >
-            <Calendar size={13} />
-            <span className="hidden sm:inline">Sessions</span>
-          </a>
-          <a
-            href="#memories"
-            className="px-2.5 py-1 rounded-lg text-rose-700 hover:text-rose-950 hover:bg-rose-50 transition-colors flex items-center gap-1 text-[11px] font-bold"
-            title="Confidential SGC Memories Vault"
-          >
-            <Lock size={12} className="text-rose-600" />
-            <span className="hidden sm:inline">Memories</span>
-          </a>
-          <a
-            href="#team"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Team & Alumni"
-          >
-            <Users size={13} />
-            <span className="hidden sm:inline">People</span>
-          </a>
-          <a
-            href="#knowledge-discovery"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Knowledge Hub"
-          >
-            <Compass size={13} />
-            <span className="hidden sm:inline">Vault</span>
-          </a>
-          <a
-            href="#contact"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Contact SGC"
-          >
-            <Mail size={13} />
-            <span className="hidden sm:inline">Contact</span>
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-1.5 pl-2 border-l border-neutral-200">
-          <button
-            onClick={() => setIsTourOpen(true)}
-            className="p-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition-colors cursor-pointer"
-            title="Quick Tour"
-          >
-            <HelpCircle size={14} className="text-amber-600" />
-          </button>
-
-          <button
-            onClick={() => setIsPortalOpen(true)}
-            className="px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
-          >
-            <Lock size={12} />
-            <span className="hidden sm:inline">Portal</span>
-          </button>
-
-          {showScrollTop && (
-            <button
-              onClick={scrollToTop}
-              className="p-1.5 rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors cursor-pointer"
-              aria-label="Back to top"
-              title="Scroll to Top"
-            >
-              <ArrowUp size={13} />
-            </button>
-          )}
-        </div>
-      </aside>
+      )}
     </div>
   );
 }
