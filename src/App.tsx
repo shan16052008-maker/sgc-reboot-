@@ -1,10 +1,7 @@
 import "./styles/home.css";
 import { useEffect, useState, useCallback } from "react";
 import { gsap } from "gsap";
-import { 
-  ArrowUp, Sparkles, Compass, Users, Calendar, Trophy, 
-  Lock, Search, HelpCircle, RotateCcw, Mail 
-} from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import Hero from "./components/Hero";
 import About from "./components/About";
 import Announcements from "./components/Announcements";
@@ -21,6 +18,7 @@ import SplashScreen from "./components/SplashScreen";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import OnboardingModal from "./components/OnboardingModal";
 import Toast, { type ToastMessage } from "./components/Toast";
+import BottomNavDock from "./components/BottomNavDock";
 import { SGC_IDENTITY } from "./data/sgcData";
 
 function App() {
@@ -28,7 +26,6 @@ function App() {
     // Show splash screen on first visit of session
     return sessionStorage.getItem("sgc_intro_seen") !== "true";
   });
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isPortalOpen, setIsPortalOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
@@ -71,10 +68,6 @@ function App() {
   };
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -82,18 +75,11 @@ function App() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
-      window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   return (
     <div className="min-h-screen bg-[#FFFDF7] text-neutral-900 selection:bg-amber-100 selection:text-amber-900 overflow-x-hidden font-sans">
@@ -198,122 +184,12 @@ function App() {
       {/* Global Feedback Toast Notification System */}
       <Toast toasts={toasts} onDismiss={dismissToast} />
 
-      {/* SGC Bottom Navigation Dock with Official Logo, Links & Quick Controls */}
-      <aside
-        aria-label="Interactive Quick Navigation Dock"
-        className="floating-dock fixed bottom-5 left-1/2 -translate-x-1/2 z-40 px-3 py-2 rounded-full bg-white/95 backdrop-blur-xl border border-neutral-200/90 shadow-2xl flex items-center gap-2 sm:gap-3 text-xs font-medium max-w-[95vw]"
-      >
-        {/* Dock Logo Icon */}
-        <a
-          href="#home"
-          className="w-7 h-7 rounded-full bg-white border border-neutral-200 p-0.5 shadow-xs flex items-center justify-center shrink-0 hover:scale-110 transition-transform"
-          title="Back to Top / Home"
-        >
-          <img src="/logo.png" alt="SGC" className="w-full h-full object-contain" />
-        </a>
-
-        <button
-          onClick={() => setIsCommandPaletteOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-900 transition-colors cursor-pointer"
-          title="Search SGC (Ctrl+K)"
-        >
-          <Search size={13} className="text-neutral-500" />
-          <span className="hidden sm:inline font-semibold">Search</span>
-          <kbd className="px-1.5 py-0.5 rounded bg-white text-[9px] font-mono border border-neutral-200 text-neutral-600">⌘K</kbd>
-        </button>
-
-        <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] text-neutral-500 font-mono pr-2 border-r border-neutral-200">
-          <Sparkles size={12} className="text-amber-500" />
-          {SGC_IDENTITY.motto}
-        </span>
-
-        <nav className="flex items-center gap-1">
-          <a
-            href="#about"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors text-[11px] font-semibold"
-            title="About SGC"
-          >
-            About
-          </a>
-          <a
-            href="#achievements"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Achievements"
-          >
-            <Trophy size={13} />
-            <span className="hidden sm:inline">Wins</span>
-          </a>
-          <a
-            href="#daily-sessions"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Daily Sessions"
-          >
-            <Calendar size={13} />
-            <span className="hidden sm:inline">Sessions</span>
-          </a>
-          <a
-            href="#memories"
-            className="px-2.5 py-1 rounded-lg text-rose-700 hover:text-rose-950 hover:bg-rose-50 transition-colors flex items-center gap-1 text-[11px] font-bold"
-            title="Confidential SGC Memories Vault"
-          >
-            <Lock size={12} className="text-rose-600" />
-            <span className="hidden sm:inline">Memories</span>
-          </a>
-          <a
-            href="#team"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Team & Alumni"
-          >
-            <Users size={13} />
-            <span className="hidden sm:inline">People</span>
-          </a>
-          <a
-            href="#knowledge-discovery"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Knowledge Hub"
-          >
-            <Compass size={13} />
-            <span className="hidden sm:inline">Vault</span>
-          </a>
-          <a
-            href="#contact"
-            className="px-2.5 py-1 rounded-lg text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100 transition-colors flex items-center gap-1 text-[11px] font-semibold"
-            title="Contact SGC"
-          >
-            <Mail size={13} />
-            <span className="hidden sm:inline">Contact</span>
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-1.5 pl-2 border-l border-neutral-200">
-          <button
-            onClick={() => setIsTourOpen(true)}
-            className="p-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition-colors cursor-pointer"
-            title="Quick Tour"
-          >
-            <HelpCircle size={14} className="text-amber-600" />
-          </button>
-
-          <button
-            onClick={() => setIsPortalOpen(true)}
-            className="px-3 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
-          >
-            <Lock size={12} />
-            <span className="hidden sm:inline">Portal</span>
-          </button>
-
-          {showScrollTop && (
-            <button
-              onClick={scrollToTop}
-              className="p-1.5 rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors cursor-pointer"
-              aria-label="Back to top"
-              title="Scroll to Top"
-            >
-              <ArrowUp size={13} />
-            </button>
-          )}
-        </div>
-      </aside>
+      {/* Interactive SGC Bottom Navigation Dock with Scroll-Spy & UX Controls */}
+      <BottomNavDock
+        onOpenSearch={() => setIsCommandPaletteOpen(true)}
+        onOpenPortal={() => setIsPortalOpen(true)}
+        onOpenTour={() => setIsTourOpen(true)}
+      />
     </div>
   );
 }
