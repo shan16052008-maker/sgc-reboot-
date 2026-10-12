@@ -337,7 +337,7 @@ export const ANNOUNCEMENTS: Announcement[] = [
     title: "🎉 Revibe '26 — Successfully Completed!",
     content: "Thank you to everyone who participated and helped make Revibe '26 a grand success with thrilling competitions and student innovations!",
     image: "/announcements/revibe-poster.jpg",
-    link: "#memories",
+    link: "https://www.linkedin.com/in/studentguidancecell-cahcet/",
     linkText: "View Event Highlights",
     tag: "Flagship Event",
   },

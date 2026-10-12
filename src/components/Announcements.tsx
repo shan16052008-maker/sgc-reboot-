@@ -98,6 +98,8 @@ export default function Announcements() {
                 {current.link ? (
                   <a
                     href={current.link}
+                    target={current.link.startsWith("http") ? "_blank" : undefined}
+                    rel={current.link.startsWith("http") ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold text-xs sm:text-sm shadow-md transition-all hover:scale-102 cursor-pointer"
                   >
                     <span>{current.linkText || "View Details"}</span>
