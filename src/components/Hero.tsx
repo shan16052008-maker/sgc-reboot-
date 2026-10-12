@@ -105,7 +105,7 @@ export default function Hero({ onOpenSearch, onOpenPortal, onOpenTour }: HeroPro
   const totalSessions = SCHEDULE_WEEKS.reduce((acc, w) => acc + w.sessions.length, 0);
 
   return (
-    <section id="home" className="relative pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden bg-gradient-to-b from-[#FFFDF7] via-[#FFF9EE]/40 to-[#FFFDF7]">
+    <section id="home" className="relative pt-12 pb-20 md:pt-16 md:pb-28 overflow-hidden bg-gradient-to-b from-[#FFFDF7] via-[#FFF9EE]/40 to-[#FFFDF7]">
       {/* Dynamic ambient colored lights */}
       <div
         ref={glowRef}
